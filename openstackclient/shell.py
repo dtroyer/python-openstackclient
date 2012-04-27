@@ -19,7 +19,6 @@
 Command-line interface to the OpenStack APIs
 """
 
-import argparse
 import logging
 import os
 import sys
