@@ -116,21 +116,14 @@ class OpenStackShell(App):
 
         return parser
 
-    def prepare_to_run_command(self, cmd):
-        """Set up auth and API versions"""
-        self.log.debug('prepare_to_run_command %s', cmd.__class__.__name__)
+    def get_token_and_endpoint(self, cmd):
+        """Returns the authentication token and API endpoint.
 
-        # stash selected API versions for later
-        # TODO(dtroyer): how do extenstions add their version requirements?
-        self.api_version = {
-            'compute': self.options.os_compute_api_version,
-            'identity': self.options.os_identity_api_version,
-            'image': self.options.os_image_api_version,
-        }
-
-        if self.options.debug:
-            print "API: Identity=%s Compute=%s Image=%s" % (self.api_version['identity'], self.api_version['compute'], self.api_version['image'])
-            print "cmd: %s" % cmd
+        Verify that the user has provided the authentication
+        information needed for a given command. Raises an exception if
+        the user has not and the command requires it. If the command
+        does not require authentication, returns (None, None).
+        """
 
         # do checking of os_username, etc here
         if (self.options.os_token and self.options.os_url):
@@ -169,11 +162,30 @@ class OpenStackShell(App):
             )
             token = self.auth_client.auth_token
             endpoint = self.auth_client.service_catalog.url_for(service_type=cmd.api)
+        return (token, endpoint)
 
-        if self.options.debug:
-            print "api: %s" % cmd.api
-            print "token: %s" % token
-            print "endpoint: %s" % endpoint
+    def prepare_to_run_command(self, cmd):
+        """Set up auth and API versions"""
+        self.log.debug('prepare_to_run_command %s', cmd.__class__.__name__)
+
+        # stash selected API versions for later
+        # TODO(dtroyer): how do extenstions add their version requirements?
+        # (dhellmann): Move the version option to the extension plugin?
+        self.api_version = {
+            'compute': self.options.os_compute_api_version,
+            'identity': self.options.os_identity_api_version,
+            'image': self.options.os_image_api_version,
+        }
+
+        self.log.debug('Identity=%s', self.api_version['identity'])
+        self.log.debug('Compute =%s', self.api_version['compute'])
+        self.log.debug('Image   =%s', self.api_version['image'])
+
+        token, endpoint = self.get_token_and_endpoint(cmd)
+
+        self.log.debug("api: %s", (cmd.api if hasattr(cmd, 'api') else None))
+        self.log.debug("token: %s", token)
+        self.log.debug("endpoint: %s", endpoint)
 
         # get a client for the desired api here
 
