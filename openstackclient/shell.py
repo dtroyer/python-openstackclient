@@ -115,6 +115,12 @@ class OpenStackShell(App):
             default=env('OS_URL'),
             help='Defaults to env[OS_URL]')
 
+        parser.add_argument('--insecure',
+                            default=env('NOVACLIENT_INSECURE'),
+                            action='store_true',
+                            help=argparse.SUPPRESS,
+                            )
+
         return parser
 
     def prepare_to_run_command(self, cmd):
