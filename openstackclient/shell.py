@@ -124,6 +124,9 @@ class OpenStackShell(App):
         the user has not and the command requires it. If the command
         does not require authentication, returns (None, None).
         """
+        requires_auth = getattr(cmd, 'REQUIRES_AUTH', False)
+        if not requires_auth:
+            return (None, None)
 
         # do checking of os_username, etc here
         if (self.options.os_token and self.options.os_url):

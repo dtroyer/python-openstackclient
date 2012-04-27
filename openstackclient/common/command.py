@@ -26,6 +26,14 @@ class OpenStackCommand(Command):
     """Base class for OpenStack commands
     """
 
+    # Boolean indicating whether this command needs the user to
+    # provide authentication information before it can be run. The
+    # value is used by OpenStackShell.get_token_and_endpoint() to
+    # decide if the user needs to provide those options before the
+    # command is attempted. Most commands need auth, but we need
+    # a way to let the `help` command run without it.
+    REQUIRES_AUTH = True
+
     api = None
 
     def run(self, parsed_args):
