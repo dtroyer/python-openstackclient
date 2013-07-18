@@ -35,8 +35,8 @@ from openstackclient.common import utils
 KEYRING_SERVICE = 'openstack'
 
 DEFAULT_COMPUTE_API_VERSION = '2'
-DEFAULT_IDENTITY_API_VERSION = '2.0'
-DEFAULT_IMAGE_API_VERSION = '1'
+DEFAULT_IDENTITY_API_VERSION = ''
+DEFAULT_IMAGE_API_VERSION = '2'
 DEFAULT_VOLUME_API_VERSION = '1'
 DEFAULT_DOMAIN = 'default'
 
@@ -341,12 +341,6 @@ class OpenStackShell(app.App):
             'volume': self.options.os_volume_api_version,
         }
 
-        # Add the API version-specific commands
-        for api in self.api_version.keys():
-            version = '.v' + self.api_version[api].replace('.', '_')
-            self.command_manager.add_command_group(
-                'openstack.' + api + version)
-
         # Commands that span multiple APIs
         self.command_manager.add_command_group(
             'openstack.common')
@@ -368,14 +362,26 @@ class OpenStackShell(app.App):
         if self.options.deferred_help:
             self.DeferredHelpAction(self.parser, self.parser, None, None)
 
+        # Needed to prime API versions
+        self.authenticate_user()
+
+        # Add the API version-specific commands
+        for api in self.api_version.keys():
+            version = '.v' + self.api_version[api].replace('.', '_')
+            self.command_manager.add_command_group(
+                'openstack.' + api + version)
+
         # If the user is not asking for help, make sure they
         # have given us auth.
         cmd_name = None
         if argv:
             cmd_info = self.command_manager.find_command(argv)
             cmd_factory, cmd_name, sub_argv = cmd_info
-        if self.interactive_mode or cmd_name != 'help':
-            self.authenticate_user()
+        # FIXME(dtroyer): the help command should work wihtout
+        #                 authentication but we don't know the API
+        #                 versions without a service catalog.  :(
+        #if self.interactive_mode or cmd_name != 'help':
+        #    self.authenticate_user()
 
     def prepare_to_run_command(self, cmd):
         """Set up auth and API versions"""

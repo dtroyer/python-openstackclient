@@ -31,7 +31,7 @@ API_VERSIONS = {
 
 
 def make_client(instance):
-    """Returns an image service client."""
+    """Returns an image service client"""
     image_client = utils.get_client_class(
         API_NAME,
         instance._api_version[API_NAME],
