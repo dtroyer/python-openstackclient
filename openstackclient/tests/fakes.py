@@ -33,6 +33,9 @@ class FakeStdout:
             result = result + line
         return result
 
+    def lines(self):
+        return ''.join(self.content).replace('\r', '')
+
 
 class FakeApp(object):
     def __init__(self, _stdout):
@@ -51,6 +54,7 @@ class FakeClientManager(object):
         self.image = None
         self.object = None
         self.volume = None
+        self.network = None
         self.auth_ref = None
 
 
