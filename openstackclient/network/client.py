@@ -13,10 +13,11 @@
 #   under the License.
 #
 
+"""Network client"""
+
 import logging
 
 from openstackclient.common import utils
-
 
 LOG = logging.getLogger(__name__)
 
@@ -29,14 +30,13 @@ API_VERSIONS = {
 
 
 def make_client(instance):
-    """Returns an network service client."""
+    """Returns a network service client."""
     network_client = utils.get_client_class(
         API_NAME,
         instance._api_version[API_NAME],
         API_VERSIONS)
-    if not instance._url:
-        instance._url = instance.get_endpoint_for_service_type("network")
-    return network_client(
+    LOG.debug('instantiating network client: %s' % network_client)
+    client = network_client(
         username=instance._username,
         tenant_name=instance._project_name,
         password=instance._password,
@@ -47,6 +47,18 @@ def make_client(instance):
         insecure=instance._insecure,
         ca_cert=instance._cacert,
     )
+
+    # Populate the Network client to skip another auth query to Identity
+    if instance._url:
+        # token flow
+        client.httpclient.endpoint_url = instance._url
+    else:
+        # password flow
+        client.httpclient.endpoint_url = instance.get_endpoint_for_service_type(
+            API_NAME)
+        client.httpclient.service_catalog = instance._service_catalog
+    client.httpclient.auth_token = instance._token
+    return client
 
 
 def build_option_parser(parser):

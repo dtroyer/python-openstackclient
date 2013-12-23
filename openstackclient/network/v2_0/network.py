@@ -15,8 +15,13 @@
 
 """Network action implementations"""
 
+import logging
+
+from cliff import lister
+
 from neutronclient.neutron.v2_0 import network as neu2
 from neutronclient.neutron.v2_0 import nvpnetworkgateway
+from openstackclient.common import utils
 from openstackclient.network import v2_0 as v2_0
 
 
@@ -49,9 +54,14 @@ class DeleteNetwork(v2_0.DeleteCommand):
     metavar = '<network>'
     help_text = 'Name or ID of network to delete'
 
+    def get_parser(self, prog_name):
+        print "DeleteNetwork.get_parser()"
+        print "netcli: %s" % self.app.client_manager.network
 
-class ListNetwork(v2_0.ListCommand):
+class ListNetwork(lister.Lister):
     """List networks"""
+
+    log = logging.getLogger(__name__ + '.ListNetwork')
 
     def get_parser(self, prog_name):
         parser = super(ListNetwork, self).get_parser(prog_name)
@@ -61,21 +71,48 @@ class ListNetwork(v2_0.ListCommand):
             default=False,
             help='List external networks',
         )
+        parser.add_argument(
+            '--long',
+            action='store_true',
+            default=False,
+            help='Additional fields are listed in output',
+        )
         return parser
 
     def take_action(self, parsed_args):
         self.log.debug('take_action(%s)' % parsed_args)
-        if parsed_args.external:
-            neuter = neu2.ListExternalNetwork(self.app, self.app_args)
-        else:
-            neuter = neu2.ListNetwork(self.app, self.app_args)
-        neuter.get_client = self.get_client
+        network_client = self.app.client_manager.network
+
         parsed_args.request_format = 'json'
         parsed_args.fields = []
         parsed_args.page_size = None
         parsed_args.sort_key = []
         parsed_args.sort_dir = []
-        return neuter.take_action(parsed_args)
+
+        search_opts = {}
+        if parsed_args.fields:
+            search_opts.update({'fields': parsed_args.fields})
+        if parsed_args.external:
+            # TODO(dtroyer): Should this be a string or bool?
+            search_opts['router:external'] = 'True'
+
+        if parsed_args.long:
+            search_opts['verbose'] = 'True'
+            columns = ('id', 'name', 'subnets', 'tenant_id', 'status', 'shared', 'admin_state_up')
+            column_headers = ('ID', 'Name', 'Subnets', 'Project', 'Status', 'Shared', 'Admin Up')
+        else:
+            columns = ('name', 'status', 'admin_state_up')
+            column_headers = ('Name', 'Status', 'Admin Up')
+        data = network_client.list_networks(**search_opts)
+
+        return (column_headers,
+                (utils.get_dict_properties(
+                    s, columns,
+                    mixed_case_fields=[],
+                    formatters={
+                        'Metadata': utils.format_dict,
+                    },
+                ) for s in data['networks']))
 
 
 class SetNetwork(v2_0.SetCommand):
