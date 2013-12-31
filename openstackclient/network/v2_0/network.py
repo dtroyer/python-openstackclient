@@ -18,6 +18,7 @@
 import logging
 
 from cliff import lister
+from cliff import show
 
 from neutronclient.neutron.v2_0 import network as neu2
 from neutronclient.neutron.v2_0 import nvpnetworkgateway
@@ -105,6 +106,8 @@ class ListNetwork(lister.Lister):
             column_headers = ('Name', 'Status', 'Admin Up')
         data = network_client.list_networks(**search_opts)
 
+        # TODO(dtroyer): port over the subnet lookup and format
+
         return (column_headers,
                 (utils.get_dict_properties(
                     s, columns,
@@ -124,13 +127,32 @@ class SetNetwork(v2_0.SetCommand):
     help_text = 'Name or ID of network to set'
 
 
-class ShowNetwork(v2_0.ShowCommand):
-    """Show a network"""
+class ShowNetwork(show.ShowOne):
+    """Show network details"""
 
-    clazz = neu2.ShowNetwork
-    name = 'id'
-    metavar = '<network>'
-    help_text = 'Name or ID of network to show'
+    log = logging.getLogger(__name__ + '.ShowNetwork')
+
+    def get_parser(self, prog_name):
+        parser = super(ShowNetwork, self).get_parser(prog_name)
+        parser.add_argument(
+            'network',
+            metavar='<network>',
+            help='Network to show (name or ID)',
+        )
+        return parser
+
+    def take_action(self, parsed_args):
+        self.log.debug('take_action(%s)' % parsed_args)
+        network_client = self.app.client_manager.network
+
+        _id = find_resourceid_by_name_or_id(
+            network_client,
+            self.resource,
+            parsed_args.id,
+        )
+
+        data = network_client.show_network(network_id, **kwargs)
+        return zip(*sorted(six.iteritems(data)))
 
 
 class AddGatewayNetwork(v2_0.AddCommand):
