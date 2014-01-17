@@ -132,7 +132,7 @@ class RESTApi(object):
         return self._error_handler(response)
 
     def _error_handler(self, response):
-        if response.status_code < 200 or response.status_code >= 300:
+        if response.status_code < 200 or response.status_code >= 400:
             self.logger.debug(
                 "ERROR: %s",
                 response.text,

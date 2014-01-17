@@ -357,6 +357,7 @@ class OpenStackShell(app.App):
             region_name=self.options.os_region_name,
             verify=self.verify,
             api_version=self.api_version,
+            restapi=self.restapi,
         )
         return
 
@@ -460,6 +461,12 @@ class OpenStackShell(app.App):
             verify=self.verify,
             debug=self.options.debug,
         )
+
+        # Add the API version-specific commands
+#         for api in self.api_version.keys():
+#             version = '.v' + self.api_version[api].replace('.', '_')
+#             self.command_manager.add_command_group(
+#                 'openstack.' + api + version)
 
     def prepare_to_run_command(self, cmd):
         """Set up auth and API versions"""
