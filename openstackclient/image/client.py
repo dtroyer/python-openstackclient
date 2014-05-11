@@ -17,7 +17,9 @@ import logging
 
 from glanceclient import exc as gc_exceptions
 from glanceclient.v1 import client as gc_v1_client
+from glanceclient.v2 import client as gc_v2_client
 from glanceclient.v1 import images as gc_v1_images
+from glanceclient.v2 import images as gc_v2_images
 from openstackclient.common import utils
 
 
@@ -28,7 +30,7 @@ API_VERSION_OPTION = 'os_image_api_version'
 API_NAME = "image"
 API_VERSIONS = {
     "1": "openstackclient.image.client.Client_v1",
-    "2": "glanceclient.v2.client.Client",
+    "2": "openstackclient.image.client.Client_v2",
 }
 
 
@@ -113,3 +115,12 @@ class ImageManager_v1(gc_v1_images.ImageManager):
                 continue
 
         return found
+
+
+
+class Client_v2(gc_v2_client.Client):
+    """An image v2 client that uses ImageManager_v2"""
+
+    def __init__(self, *args, **kwargs):
+        super(Client_v1, self).__init__(*args, **kwargs)
+        self.images = ImageManager_v1(getattr(self, 'http_client', self))

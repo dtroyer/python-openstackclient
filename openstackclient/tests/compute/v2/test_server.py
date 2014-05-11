@@ -109,15 +109,8 @@ class TestServerImageCreate(TestServer):
             compute_fakes.server_name,
         )
 
-        collist = ('id', 'is_public', 'name', 'owner')
-        self.assertEqual(columns, collist)
-        datalist = (
-            image_fakes.image_id,
-            False,
-            image_fakes.image_name,
-            image_fakes.image_owner,
-        )
-        self.assertEqual(data, datalist)
+        self.assertEqual(image_fakes.IMAGE_columns, columns)
+        self.assertEqual(image_fakes.IMAGE_data, data)
 
     def test_server_image_create_name(self):
         arglist = [
@@ -139,12 +132,5 @@ class TestServerImageCreate(TestServer):
             'img-nam',
         )
 
-        collist = ('id', 'is_public', 'name', 'owner')
-        self.assertEqual(columns, collist)
-        datalist = (
-            image_fakes.image_id,
-            False,
-            image_fakes.image_name,
-            image_fakes.image_owner,
-        )
-        self.assertEqual(data, datalist)
+        self.assertEqual(image_fakes.IMAGE_columns, columns)
+        self.assertEqual(image_fakes.IMAGE_data, data)
