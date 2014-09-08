@@ -14,6 +14,7 @@
 #
 
 import copy
+import mock
 
 from openstackclient.identity.v2_0 import project
 from openstackclient.tests import fakes
@@ -258,13 +259,11 @@ class TestProjectList(TestProject):
     def setUp(self):
         super(TestProjectList, self).setUp()
 
-        self.projects_mock.list.return_value = [
-            fakes.FakeResource(
-                None,
-                copy.deepcopy(identity_fakes.PROJECT),
-                loaded=True,
-            ),
+        self.api_mock = mock.Mock()
+        self.api_mock.project_list.return_value = [
+            copy.deepcopy(identity_fakes.PROJECT),
         ]
+        self.app.client_manager.identity.api = self.api_mock
 
         # Get the command object to test
         self.cmd = project.ListProject(self.app, None)
@@ -276,7 +275,7 @@ class TestProjectList(TestProject):
 
         # DisplayCommandBase.take_action() returns two tuples
         columns, data = self.cmd.take_action(parsed_args)
-        self.projects_mock.list.assert_called_with()
+        self.api_mock.project_list.assert_called_with()
 
         collist = ('ID', 'Name')
         self.assertEqual(columns, collist)
@@ -284,7 +283,7 @@ class TestProjectList(TestProject):
             identity_fakes.project_id,
             identity_fakes.project_name,
         ), )
-        self.assertEqual(tuple(data), datalist)
+        self.assertEqual(datalist, tuple(data))
 
     def test_project_list_long(self):
         arglist = [
@@ -297,7 +296,7 @@ class TestProjectList(TestProject):
 
         # DisplayCommandBase.take_action() returns two tuples
         columns, data = self.cmd.take_action(parsed_args)
-        self.projects_mock.list.assert_called_with()
+        self.api_mock.project_list.assert_called_with()
 
         collist = ('ID', 'Name', 'Description', 'Enabled')
         self.assertEqual(columns, collist)
@@ -307,7 +306,7 @@ class TestProjectList(TestProject):
             identity_fakes.project_description,
             True,
         ), )
-        self.assertEqual(tuple(data), datalist)
+        self.assertEqual(datalist, tuple(data))
 
 
 class TestProjectSet(TestProject):

@@ -134,12 +134,14 @@ class ListProject(lister.Lister):
             columns = ('ID', 'Name', 'Description', 'Enabled')
         else:
             columns = ('ID', 'Name')
-        data = self.app.client_manager.identity.tenants.list()
-        return (columns,
-                (utils.get_item_properties(
-                    s, columns,
-                    formatters={},
-                ) for s in data))
+        data = self.app.client_manager.identity.api.project_list()
+        return (
+            columns,
+            (utils.get_dict_properties(
+                s, columns,
+                formatters={},
+            ) for s in data)
+        )
 
 
 class SetProject(command.Command):

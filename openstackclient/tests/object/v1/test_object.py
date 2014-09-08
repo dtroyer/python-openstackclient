@@ -16,6 +16,7 @@
 import copy
 import mock
 
+from openstackclient.api import object_store
 from openstackclient.object.v1 import object as obj
 from openstackclient.tests.object.v1 import fakes as object_fakes
 
@@ -27,6 +28,11 @@ AUTH_URL = "http://0.0.0.0"
 class TestObject(object_fakes.TestObjectv1):
     def setUp(self):
         super(TestObject, self).setUp()
+        self.app.client_manager.object_store.api = object_store.APIv1(
+            session=mock.Mock(),
+            service_type="object-store",
+        )
+        self.api = self.app.client_manager.object_store.api
 
 
 class TestObjectClient(TestObject):
@@ -43,7 +49,7 @@ class TestObjectClient(TestObject):
 
 
 @mock.patch(
-    'openstackclient.object.v1.object.lib_object.list_objects'
+    'openstackclient.api.object_store.APIv1.object_list'
 )
 class TestObjectList(TestObject):
 
@@ -71,9 +77,7 @@ class TestObjectList(TestObject):
         columns, data = self.cmd.take_action(parsed_args)
 
         o_mock.assert_called_with(
-            self.app.client_manager.session,
-            AUTH_URL,
-            object_fakes.container_name,
+            container=object_fakes.container_name,
         )
 
         collist = ('Name',)
@@ -107,9 +111,7 @@ class TestObjectList(TestObject):
             'prefix': 'floppy',
         }
         o_mock.assert_called_with(
-            self.app.client_manager.session,
-            AUTH_URL,
-            object_fakes.container_name_2,
+            container=object_fakes.container_name_2,
             **kwargs
         )
 
@@ -143,9 +145,7 @@ class TestObjectList(TestObject):
             'delimiter': '=',
         }
         o_mock.assert_called_with(
-            self.app.client_manager.session,
-            AUTH_URL,
-            object_fakes.container_name_2,
+            container=object_fakes.container_name_2,
             **kwargs
         )
 
@@ -179,9 +179,7 @@ class TestObjectList(TestObject):
             'marker': object_fakes.object_name_2,
         }
         o_mock.assert_called_with(
-            self.app.client_manager.session,
-            AUTH_URL,
-            object_fakes.container_name_2,
+            container=object_fakes.container_name_2,
             **kwargs
         )
 
@@ -215,9 +213,7 @@ class TestObjectList(TestObject):
             'end_marker': object_fakes.object_name_2,
         }
         o_mock.assert_called_with(
-            self.app.client_manager.session,
-            AUTH_URL,
-            object_fakes.container_name_2,
+            container=object_fakes.container_name_2,
             **kwargs
         )
 
@@ -251,9 +247,7 @@ class TestObjectList(TestObject):
             'limit': 2,
         }
         o_mock.assert_called_with(
-            self.app.client_manager.session,
-            AUTH_URL,
-            object_fakes.container_name_2,
+            container=object_fakes.container_name_2,
             **kwargs
         )
 
@@ -287,9 +281,7 @@ class TestObjectList(TestObject):
         kwargs = {
         }
         o_mock.assert_called_with(
-            self.app.client_manager.session,
-            AUTH_URL,
-            object_fakes.container_name,
+            container=object_fakes.container_name,
             **kwargs
         )
 
@@ -337,9 +329,7 @@ class TestObjectList(TestObject):
             'full_listing': True,
         }
         o_mock.assert_called_with(
-            self.app.client_manager.session,
-            AUTH_URL,
-            object_fakes.container_name,
+            container=object_fakes.container_name,
             **kwargs
         )
 
@@ -353,7 +343,7 @@ class TestObjectList(TestObject):
 
 
 @mock.patch(
-    'openstackclient.object.v1.object.lib_object.show_object'
+    'openstackclient.api.object_store.APIv1.object_show'
 )
 class TestObjectShow(TestObject):
 
@@ -384,10 +374,8 @@ class TestObjectShow(TestObject):
         }
         # lib.container.show_container(api, url, container)
         c_mock.assert_called_with(
-            self.app.client_manager.session,
-            AUTH_URL,
-            object_fakes.container_name,
-            object_fakes.object_name_1,
+            container=object_fakes.container_name,
+            object=object_fakes.object_name_1,
             **kwargs
         )
 

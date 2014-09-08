@@ -147,18 +147,19 @@ class ListProject(lister.Lister):
 
     def take_action(self, parsed_args):
         self.log.debug('take_action(%s)', parsed_args)
-        identity_client = self.app.client_manager.identity
         if parsed_args.long:
             columns = ('ID', 'Name', 'Domain ID', 'Description', 'Enabled')
         else:
             columns = ('ID', 'Name')
         kwargs = {}
         if parsed_args.domain:
-            domain = common.find_domain(identity_client, parsed_args.domain)
+            domain = self.app.client_manager.identity.api.find_domain(
+                parsed_args.domain,
+            )
             kwargs['domain'] = domain.id
-        data = identity_client.projects.list(**kwargs)
+        data = self.app.client_manager.identity.api.project_list()
         return (columns,
-                (utils.get_item_properties(
+                (utils.get_dict_properties(
                     s, columns,
                     formatters={},
                 ) for s in data))

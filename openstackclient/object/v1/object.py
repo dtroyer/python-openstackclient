@@ -24,7 +24,6 @@ from cliff import lister
 from cliff import show
 
 from openstackclient.common import utils
-from openstackclient.object.v1.lib import object as lib_object
 
 
 class CreateObject(show.ShowOne):
@@ -49,11 +48,9 @@ class CreateObject(show.ShowOne):
     def take_action(self, parsed_args):
         self.log.debug('take_action(%s)', parsed_args)
 
-        data = lib_object.create_object(
-            self.app.client_manager.session,
-            self.app.client_manager.object_store.endpoint,
-            parsed_args.container,
-            parsed_args.object,
+        data = self.app.client_manager.object_store.api.object_create(
+            container=parsed_args.container,
+            object=parsed_args.object,
         )
 
         return zip(*sorted(six.iteritems(data)))
@@ -81,11 +78,9 @@ class DeleteObject(command.Command):
     def take_action(self, parsed_args):
         self.log.debug('take_action(%s)', parsed_args)
 
-        lib_object.delete_object(
-            self.app.client_manager.session,
-            self.app.client_manager.object_store.endpoint,
-            parsed_args.container,
-            parsed_args.object,
+        self.app.client_manager.object_store.api.object_delete(
+            container=parsed_args.container,
+            object=parsed_args.object,
         )
 
 
@@ -169,10 +164,8 @@ class ListObject(lister.Lister):
         if parsed_args.all:
             kwargs['full_listing'] = True
 
-        data = lib_object.list_objects(
-            self.app.client_manager.session,
-            self.app.client_manager.object_store.endpoint,
-            parsed_args.container,
+        data = self.app.client_manager.object_store.api.object_list(
+            container=parsed_args.container,
             **kwargs
         )
 
@@ -205,11 +198,9 @@ class ShowObject(show.ShowOne):
     def take_action(self, parsed_args):
         self.log.debug('take_action(%s)', parsed_args)
 
-        data = lib_object.show_object(
-            self.app.client_manager.session,
-            self.app.client_manager.object_store.endpoint,
-            parsed_args.container,
-            parsed_args.object,
+        data = self.app.client_manager.object_store.api.object_show(
+            container=parsed_args.container,
+            object=parsed_args.object,
         )
 
         return zip(*sorted(six.iteritems(data)))
