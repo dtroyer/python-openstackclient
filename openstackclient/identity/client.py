@@ -28,6 +28,10 @@ API_VERSIONS = {
     '2.0': 'openstackclient.identity.client.IdentityClientv2_0',
     '3': 'keystoneclient.v3.client.Client',
 }
+API_VERSIONS_2 = {
+    '2.0': 'openstackclient.api.identity_v2.APIv2',
+    '3': 'openstackclient.api.identity_v3.APIv3',
+}
 
 # Translate our API version to auth plugin version prefix
 AUTH_VERSIONS = {
@@ -43,6 +47,12 @@ def make_client(instance):
         instance._api_version[API_NAME],
         API_VERSIONS)
     LOG.debug('Instantiating identity client: %s', identity_client)
+
+    identity_api = utils.get_client_class(
+        API_NAME,
+        instance._api_version[API_NAME],
+        API_VERSIONS_2)
+    LOG.debug('Instantiating identity api: %s', identity_api)
 
     # TODO(dtroyer): Something doesn't like the session.auth when using
     #                token auth, chase that down.
@@ -66,6 +76,15 @@ def make_client(instance):
     #                so we can remove it
     if not instance._url:
         instance.auth_ref = instance.auth.get_auth_ref(instance.session)
+
+    client.api = identity_api(
+        session=instance.session,
+        service_type="identity",
+        endpoint=instance.get_endpoint_for_service_type(
+            API_NAME,
+            endpoint_type="admin",
+        )
+    )
 
     return client
 

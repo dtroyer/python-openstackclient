@@ -370,13 +370,11 @@ class TestProjectList(TestProject):
     def setUp(self):
         super(TestProjectList, self).setUp()
 
-        self.projects_mock.list.return_value = [
-            fakes.FakeResource(
-                None,
-                copy.deepcopy(identity_fakes.PROJECT),
-                loaded=True,
-            ),
+        self.api_mock = mock.Mock()
+        self.api_mock.project_list.return_value = [
+            copy.deepcopy(identity_fakes.PROJECT),
         ]
+        self.app.client_manager.identity.api = self.api_mock
 
         # Get the command object to test
         self.cmd = project.ListProject(self.app, None)
@@ -388,7 +386,7 @@ class TestProjectList(TestProject):
 
         # DisplayCommandBase.take_action() returns two tuples
         columns, data = self.cmd.take_action(parsed_args)
-        self.projects_mock.list.assert_called_with()
+        self.api_mock.project_list.assert_called_with()
 
         collist = ('ID', 'Name')
         self.assertEqual(columns, collist)
@@ -396,7 +394,7 @@ class TestProjectList(TestProject):
             identity_fakes.project_id,
             identity_fakes.project_name,
         ), )
-        self.assertEqual(tuple(data), datalist)
+        self.assertEqual(datalist, tuple(data))
 
     def test_project_list_long(self):
         arglist = [
@@ -409,7 +407,7 @@ class TestProjectList(TestProject):
 
         # DisplayCommandBase.take_action() returns two tuples
         columns, data = self.cmd.take_action(parsed_args)
-        self.projects_mock.list.assert_called_with()
+        self.api_mock.project_list.assert_called_with()
 
         collist = ('ID', 'Name', 'Domain ID', 'Description', 'Enabled')
         self.assertEqual(columns, collist)
@@ -420,7 +418,7 @@ class TestProjectList(TestProject):
             identity_fakes.project_description,
             True,
         ), )
-        self.assertEqual(tuple(data), datalist)
+        self.assertEqual(datalist, tuple(data))
 
     def test_project_list_domain(self):
         arglist = [
@@ -430,18 +428,16 @@ class TestProjectList(TestProject):
             ('domain', identity_fakes.domain_name),
         ]
 
-        self.domains_mock.get.return_value = fakes.FakeResource(
-            None,
-            copy.deepcopy(identity_fakes.DOMAIN),
-            loaded=True,
-        )
+        self.api_mock.find.return_value = copy.deepcopy(identity_fakes.DOMAIN)
 
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
 
         # DisplayCommandBase.take_action() returns two tuples
         columns, data = self.cmd.take_action(parsed_args)
-        self.projects_mock.list.assert_called_with(
-            domain=identity_fakes.domain_id)
+        self.api_mock.find_domain.assert_called_with(
+            identity_fakes.domain_name,
+        )
+        self.api_mock.project_list.assert_called_with()
 
         collist = ('ID', 'Name')
         self.assertEqual(columns, collist)
@@ -449,7 +445,7 @@ class TestProjectList(TestProject):
             identity_fakes.project_id,
             identity_fakes.project_name,
         ), )
-        self.assertEqual(tuple(data), datalist)
+        self.assertEqual(datalist, tuple(data))
 
     def test_project_list_domain_no_perms(self):
         arglist = [
@@ -465,15 +461,17 @@ class TestProjectList(TestProject):
         with mock.patch("openstackclient.common.utils.find_resource", mocker):
             columns, data = self.cmd.take_action(parsed_args)
 
-        self.projects_mock.list.assert_called_with(
-            domain=identity_fakes.domain_id)
+        self.api_mock.find_domain.assert_called_with(
+            identity_fakes.domain_id,
+        )
+        self.api_mock.project_list.assert_called_with()
         collist = ('ID', 'Name')
         self.assertEqual(columns, collist)
         datalist = ((
             identity_fakes.project_id,
             identity_fakes.project_name,
         ), )
-        self.assertEqual(tuple(data), datalist)
+        self.assertEqual(datalist, tuple(data))
 
 
 class TestProjectSet(TestProject):

@@ -164,18 +164,12 @@ class ListUser(lister.Lister):
             if not project:
                 return ""
             if project in project_cache.keys():
-                return project_cache[project].name
+                return project_cache[project]['name']
             else:
                 return project
+            project = project['id']
 
-        project = None
-        if parsed_args.project:
-            project = utils.find_resource(
-                identity_client.tenants,
-                parsed_args.project,
-            )
-            project = project.id
-
+        project_cache = {}
         if parsed_args.long:
             columns = (
                 'ID',
@@ -191,23 +185,36 @@ class ListUser(lister.Lister):
                 'Email',
                 'Enabled',
             )
+
             # Cache the project list
-            project_cache = {}
             try:
-                for p in identity_client.tenants.list():
-                    project_cache[p.id] = p
+                for p in identity_client.api.project_list():
+                    project_cache[p['id']] = p
             except Exception:
                 # Just forget it if there's any trouble
                 pass
         else:
             columns = column_headers = ('ID', 'Name')
-        data = identity_client.users.list(tenant_id=project)
 
+        project = None
         if parsed_args.project:
-            d = {}
-            for s in data:
-                d[s.id] = s
-            data = d.values()
+            if project_cache:
+                # Look for project name in cache
+                for id, proj in six.iteritems(project_cache):
+                    if parsed_args.project == proj['name']:
+                        project = id
+                        break
+                if project is None:
+                    project = parsed_args.project
+            else:
+                # No cache, find project by name
+                project = identity_client.api.find_attr(
+                    'tenants',
+                    parsed_args.project,
+                    resource='tenant',
+                )['id']
+
+        data = identity_client.api.user_list(project=project)
 
         if parsed_args.long:
             # FIXME(dtroyer): Sometimes user objects have 'tenant_id' instead
@@ -215,12 +222,11 @@ class ListUser(lister.Lister):
             #                 is fixed we need to handle it; auth_token.py
             #                 only looks for 'tenantId'.
             for d in data:
-                if 'tenant_id' in d._info:
-                    d._info['tenantId'] = d._info.pop('tenant_id')
-                    d._add_details(d._info)
+                if 'tenant_id' in d:
+                    d['tenantId'] = d.pop('tenant_id')
 
         return (column_headers,
-                (utils.get_item_properties(
+                (utils.get_dict_properties(
                     s, columns,
                     mixed_case_fields=('tenantId',),
                     formatters={'tenantId': _format_project},
