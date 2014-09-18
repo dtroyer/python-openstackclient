@@ -147,13 +147,17 @@ class ClientManager(object):
 
         return
 
-    def get_endpoint_for_service_type(self, service_type):
+    def get_endpoint_for_service_type(self, service_type, endpoint_type=None):
         """Return the endpoint URL for the service type."""
+        if endpoint_type is None:
+            endpoint_type = 'public'
         # See if we are using password flow auth, i.e. we have a
         # service catalog to select endpoints from
         if self._service_catalog:
             endpoint = self._service_catalog.url_for(
-                service_type=service_type)
+                service_type=service_type,
+                endpoint_type=endpoint_type,
+            )
         else:
             # Hope we were given the correct URL.
             endpoint = self._url
