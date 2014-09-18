@@ -13,6 +13,7 @@
 
 import logging
 
+from openstackclient.api import network_v2
 from openstackclient.common import utils
 
 
@@ -23,6 +24,12 @@ API_VERSION_OPTION = 'os_network_api_version'
 API_NAME = "network"
 API_VERSIONS = {
     "2": "neutronclient.v2_0.client.Client",
+}
+
+# Translate our API version to auth plugin version prefix
+NETWORK_API_VERSIONS = {
+    '2.0': 'v2.0',
+    '2': 'v2.0',
 }
 
 
@@ -36,7 +43,7 @@ def make_client(instance):
 
     if not instance._url:
         instance._url = instance.get_endpoint_for_service_type("network")
-    return network_client(
+    client = network_client(
         username=instance._username,
         tenant_name=instance._project_name,
         password=instance._password,
@@ -47,6 +54,17 @@ def make_client(instance):
         insecure=instance._insecure,
         ca_cert=instance._cacert,
     )
+
+    # v2 is hard-coded until discovery is completed, neutron only has one atm
+    client.api = network_v2.APIv2(
+        session=instance.session,
+        service_type='network',
+        endpoint=instance.get_endpoint_for_service_type(
+            API_NAME
+        ) + '/' + NETWORK_API_VERSIONS[instance._api_version[API_NAME]],
+    )
+
+    return client
 
 
 def build_option_parser(parser):
