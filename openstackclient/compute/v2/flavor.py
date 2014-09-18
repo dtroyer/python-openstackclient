@@ -97,21 +97,20 @@ class CreateFlavor(show.ShowOne):
 
     def take_action(self, parsed_args):
         self.log.debug("take_action(%s)", parsed_args)
-        compute_client = self.app.client_manager.compute
 
-        args = (
-            parsed_args.name,
-            parsed_args.ram,
-            parsed_args.vcpus,
-            parsed_args.disk,
-            parsed_args.id,
-            parsed_args.ephemeral,
-            parsed_args.swap,
-            parsed_args.rxtx_factor,
-            parsed_args.public
-        )
+        args = {
+            'name': parsed_args.name,
+            'ram': parsed_args.ram,
+            'vcpus': parsed_args.vcpus,
+            'disk': parsed_args.disk,
+            'id': parsed_args.id,
+            'ephemeral': parsed_args.ephemeral,
+            'swap': parsed_args.swap,
+            'rxtx_factor': parsed_args.rxtx_factor,
+            'public': parsed_args.public
+        }
 
-        flavor = compute_client.flavors.create(*args)._info.copy()
+        flavor = self.app.client_manager.compute.api.flavor_create(**args)
         flavor.pop("links")
 
         return zip(*sorted(six.iteritems(flavor)))
@@ -133,10 +132,8 @@ class DeleteFlavor(command.Command):
 
     def take_action(self, parsed_args):
         self.log.debug("take_action(%s)", parsed_args)
-        compute_client = self.app.client_manager.compute
-        flavor = utils.find_resource(compute_client.flavors,
-                                     parsed_args.flavor)
-        compute_client.flavors.delete(flavor.id)
+
+        self.app.client_manager.compute.api.flavor_delete(parsed_args.flavor)
         return
 
 
@@ -147,7 +144,7 @@ class ListFlavor(lister.Lister):
 
     def take_action(self, parsed_args):
         self.log.debug("take_action(%s)", parsed_args)
-        compute_client = self.app.client_manager.compute
+
         columns = (
             "ID",
             "Name",
@@ -160,9 +157,9 @@ class ListFlavor(lister.Lister):
             "Is Public",
             "Extra Specs"
         )
-        data = compute_client.flavors.list()
+        data = self.app.client_manager.compute.api.flavor_list()
         return (columns,
-                (utils.get_item_properties(
+                (utils.get_dict_properties(
                     s, columns,
                 ) for s in data))
 
@@ -183,9 +180,9 @@ class ShowFlavor(show.ShowOne):
 
     def take_action(self, parsed_args):
         self.log.debug("take_action(%s)", parsed_args)
-        compute_client = self.app.client_manager.compute
-        flavor = utils.find_resource(compute_client.flavors,
-                                     parsed_args.flavor)._info.copy()
-        flavor.pop("links")
+
+        flavor = self.app.client_manager.compute.api.flavor_show(
+            flavor=parsed_args.flavor,
+        )
 
         return zip(*sorted(six.iteritems(flavor)))

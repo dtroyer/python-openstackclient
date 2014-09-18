@@ -18,6 +18,7 @@ import logging
 from novaclient import extension
 from novaclient.v1_1.contrib import list_extensions
 
+from openstackclient.api import compute_v2
 from openstackclient.common import utils
 
 LOG = logging.getLogger(__name__)
@@ -71,6 +72,13 @@ def make_client(instance):
             API_NAME)
         client.client.service_catalog = instance._service_catalog
     client.client.auth_token = instance._token
+
+    client.api = compute_v2.APIv2(
+        session=instance.session,
+        service_type="compute",
+        endpoint=instance.get_endpoint_for_service_type(API_NAME)
+    )
+
     return client
 
 
