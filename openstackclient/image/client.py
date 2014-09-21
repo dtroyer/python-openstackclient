@@ -30,6 +30,10 @@ API_VERSIONS = {
     "1": "openstackclient.image.client.Client_v1",
     "2": "glanceclient.v2.client.Client",
 }
+API_VERSIONS_2 = {
+    '1': 'openstackclient.api.image_v1.APIv1',
+    '2': 'openstackclient.api.image_v2.APIv2',
+}
 
 
 def make_client(instance):
@@ -40,15 +44,32 @@ def make_client(instance):
         API_VERSIONS)
     LOG.debug('Instantiating image client: %s', image_client)
 
+    image_api = utils.get_client_class(
+        API_NAME,
+        instance._api_version[API_NAME],
+        API_VERSIONS_2)
+    LOG.debug('Instantiating image api: %s', image_api)
+
     if not instance._url:
         instance._url = instance.get_endpoint_for_service_type(API_NAME)
 
-    return image_client(
+    client = image_client(
         instance._url,
         token=instance._token,
         cacert=instance._cacert,
         insecure=instance._insecure,
     )
+
+    client.api = image_api(
+        session=instance.session,
+        service_type="image",
+        endpoint=instance.get_endpoint_for_service_type(
+            API_NAME,
+            endpoint_type="public",
+        )
+    )
+
+    return client
 
 
 def build_option_parser(parser):

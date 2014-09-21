@@ -80,14 +80,14 @@ class ListImage(lister.Lister):
         if parsed_args.page_size is not None:
             kwargs["page_size"] = parsed_args.page_size
 
-        data = image_client.images.list(**kwargs)
+        data = image_client.api.image_list(**kwargs)
         if parsed_args.long:
             columns = ('ID', 'Name', 'Disk Format', 'Container Format',
                        'Size', 'Status')
         else:
             columns = ("ID", "Name")
 
-        return (columns, (utils.get_item_properties(s, columns) for s in data))
+        return (columns, (utils.get_dict_properties(s, columns) for s in data))
 
 
 class SaveImage(command.Command):
