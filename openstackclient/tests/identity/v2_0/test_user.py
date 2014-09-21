@@ -381,26 +381,11 @@ class TestUserList(TestUser):
     def setUp(self):
         super(TestUserList, self).setUp()
 
-        self.projects_mock.get.return_value = fakes.FakeResource(
-            None,
-            copy.deepcopy(identity_fakes.PROJECT_2),
-            loaded=True,
-        )
-        self.projects_mock.list.return_value = [
-            fakes.FakeResource(
-                None,
-                copy.deepcopy(identity_fakes.PROJECT),
-                loaded=True,
-            ),
+        self.api_mock = mock.Mock()
+        self.api_mock.user_list.return_value = [
+            copy.deepcopy(identity_fakes.USER),
         ]
-
-        self.users_mock.list.return_value = [
-            fakes.FakeResource(
-                None,
-                copy.deepcopy(identity_fakes.USER),
-                loaded=True,
-            ),
-        ]
+        self.app.client_manager.identity.api = self.api_mock
 
         # Get the command object to test
         self.cmd = user.ListUser(self.app, None)
@@ -412,18 +397,20 @@ class TestUserList(TestUser):
 
         # DisplayCommandBase.take_action() returns two tuples
         columns, data = self.cmd.take_action(parsed_args)
-
-        self.users_mock.list.assert_called_with(tenant_id=None)
+        self.api_mock.user_list.assert_called_with(project=None)
 
         collist = ('ID', 'Name')
-        self.assertEqual(columns, collist)
+        self.assertEqual(collist, columns)
         datalist = ((
             identity_fakes.user_id,
             identity_fakes.user_name,
         ), )
-        self.assertEqual(tuple(data), datalist)
+        self.assertEqual(datalist, tuple(data))
 
     def test_user_list_project(self):
+        self.api_mock.find_attr.return_value = \
+            copy.deepcopy(identity_fakes.PROJECT)
+
         arglist = [
             '--project', identity_fakes.project_id,
         ]
@@ -431,22 +418,31 @@ class TestUserList(TestUser):
             ('project', identity_fakes.project_id),
         ]
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
-        project_id = identity_fakes.PROJECT_2['id']
+        project_id = identity_fakes.PROJECT['id']
 
         # DisplayCommandBase.take_action() returns two tuples
         columns, data = self.cmd.take_action(parsed_args)
-
-        self.users_mock.list.assert_called_with(tenant_id=project_id)
+        self.api_mock.find_attr.assert_called_with(
+            'tenants',
+            project_id,
+            resource='tenant',
+        )
+        self.api_mock.user_list.assert_called_with(project=project_id)
 
         collist = ('ID', 'Name')
-        self.assertEqual(columns, collist)
+        self.assertEqual(collist, columns)
         datalist = ((
             identity_fakes.user_id,
             identity_fakes.user_name,
         ), )
-        self.assertEqual(tuple(data), datalist)
+        self.assertEqual(datalist, tuple(data))
 
     def test_user_list_long(self):
+        self.api_mock.project_list.return_value = [
+            copy.deepcopy(identity_fakes.PROJECT),
+            copy.deepcopy(identity_fakes.PROJECT_2),
+        ]
+
         arglist = [
             '--long',
         ]
@@ -457,11 +453,10 @@ class TestUserList(TestUser):
 
         # DisplayCommandBase.take_action() returns two tuples
         columns, data = self.cmd.take_action(parsed_args)
-
-        self.users_mock.list.assert_called_with(tenant_id=None)
+        self.api_mock.user_list.assert_called_with(project=None)
 
         collist = ('ID', 'Name', 'Project', 'Email', 'Enabled')
-        self.assertEqual(columns, collist)
+        self.assertEqual(collist, columns)
         datalist = ((
             identity_fakes.user_id,
             identity_fakes.user_name,
@@ -469,7 +464,7 @@ class TestUserList(TestUser):
             identity_fakes.user_email,
             True,
         ), )
-        self.assertEqual(tuple(data), datalist)
+        self.assertEqual(datalist, tuple(data))
 
 
 class TestUserSet(TestUser):
