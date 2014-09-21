@@ -25,10 +25,21 @@ from openstackclient.common import utils
 from openstackclient.network import common
 
 
-def filters(data):
-    if 'subnets' in data:
-        data['subnets'] = utils.format_list(data['subnets'])
-    return data
+def network_filter(net):
+    """Filter network objects"""
+
+    if 'subnets' in net:
+        net['subnets'] = utils.format_list(net['subnets'])
+    if 'admin_state_up' in net:
+        net['state'] = 'UP' if net['admin_state_up'] else 'DOWN'
+        net.pop('admin_state_up')
+    if 'router:external' in net:
+        net['router_type'] = 'External' if net['router:external'] \
+            else 'Internal'
+        net.pop('router:external')
+    if 'tenant_id' in net:
+        net['project_id'] = net.pop('tenant_id')
+    return net
 
 
 class CreateNetwork(show.ShowOne):
@@ -72,7 +83,7 @@ class CreateNetwork(show.ShowOne):
         create_method = getattr(client, "create_network")
         data = create_method(body)['network']
         if data:
-            data = filters(data)
+            data = network_filter(data)
         else:
             data = {'': ''}
         return zip(*sorted(six.iteritems(data)))
@@ -141,23 +152,47 @@ class ListNetwork(lister.Lister):
             resources = 'networks_on_dhcp_agent'
             report_filter = {'dhcp_agent': parsed_args.dhcp}
             data = list_method(**report_filter)[resources]
+            columns = ('ID',)
         else:
-            list_method = getattr(client, "list_networks")
             report_filter = {}
             if parsed_args.external:
                 report_filter = {'router:external': True}
-            data = list_method(**report_filter)['networks']
-        columns = len(data) > 0 and sorted(data[0].keys()) or []
-        if parsed_args.columns:
-            list_columns = parsed_args.columns
-        else:
-            list_columns = ['id', 'name', 'subnets']
-        if not parsed_args.long and not parsed_args.dhcp:
-            columns = [x for x in list_columns if x in columns]
-        formatters = {'subnets': utils.format_list}
-        return (columns,
-                (utils.get_dict_properties(s, columns, formatters=formatters)
-                 for s in data))
+            data = client.api.network_list(**report_filter)
+            columns = ('ID', 'Name', 'Subnets')
+        column_headers = columns
+
+        if parsed_args.long and not parsed_args.dhcp:
+            columns = (
+                'ID',
+                'Name',
+                'Status',
+                'project_id',
+                'state',
+                'Shared',
+                'Subnets',
+                'provider:network_type',
+                'router_type',
+            )
+            column_headers = (
+                'ID',
+                'Name',
+                'Status',
+                'Project',
+                'State',
+                'Shared',
+                'Subnets',
+                'Network Type',
+                'Router Type',
+            )
+
+        for d in data:
+            d = network_filter(d)
+
+        return (column_headers,
+                (utils.get_dict_properties(
+                    s, columns,
+                    formatters={'subnets': utils.format_list},
+                ) for s in data))
 
 
 class SetNetwork(command.Command):
@@ -237,9 +272,10 @@ class ShowNetwork(show.ShowOne):
     def take_action(self, parsed_args):
         self.log.debug('take_action(%s)' % parsed_args)
         client = self.app.client_manager.network
-        _id = common.find(client, 'network', 'networks',
-                          parsed_args.identifier)
-        show_method = getattr(client, "show_network")
-        data = show_method(_id)['network']
-        data = filters(data)
+        net = client.api.find_attr(
+            'networks',
+            parsed_args.identifier,
+        ) #['networks']
+        data = network_filter(net)
+        print "data: %s" % net
         return zip(*sorted(six.iteritems(data)))
