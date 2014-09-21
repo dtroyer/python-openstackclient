@@ -112,10 +112,10 @@ class ListKeypair(lister.Lister):
             "Name",
             "Fingerprint"
         )
-        data = compute_client.keypairs.list()
+        data = compute_client.api.key_list()
 
         return (columns,
-                (utils.get_item_properties(
+                (utils.get_dict_properties(
                     s, columns,
                 ) for s in data))
 
