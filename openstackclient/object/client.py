@@ -44,7 +44,7 @@ def make_client(instance):
         endpoint = instance.get_endpoint_for_service_type("object-store")
     client = object_client(
         endpoint=endpoint,
-        token=instance._token,
+        token=instance.auth_ref.auth_token
     )
     return client
 

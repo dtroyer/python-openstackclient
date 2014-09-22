@@ -50,7 +50,7 @@ def make_client(instance):
         LOG.debug('Using token auth')
         client = identity_client(
             endpoint=instance._url,
-            token=instance._token,
+            token=instance.auth_ref.auth_token,
             cacert=instance._cacert,
             insecure=instance._insecure,
             trust_id=instance._trust_id,

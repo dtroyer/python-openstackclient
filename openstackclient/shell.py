@@ -27,6 +27,8 @@ from cliff import command
 from cliff import complete
 from cliff import help
 
+from os_client_config import config as cloud_config
+
 import openstackclient
 from openstackclient.common import clientmanager
 from openstackclient.common import commandmanager
@@ -191,6 +193,12 @@ class OpenStackShell(app.App):
 
         # Global arguments
         parser.add_argument(
+            '--os-cloud',
+            metavar='<cloud-name>',
+            default=env('OS_CLOUD'),
+            help='Cloud name in clouds.yaml (Env: OS_CLOUD)',
+        )
+        parser.add_argument(
             '--os-auth-url',
             metavar='<auth-url>',
             default=env('OS_AUTH_URL'),
@@ -333,6 +341,10 @@ class OpenStackShell(app.App):
                 raise exc.CommandError(
                     "You must provide a service URL via"
                     " either --os-url or env[OS_URL]")
+            # Using token auth, save these into the config
+            with self.cloud.config as cfg:
+                cfg['auth_token'] = self.options.os_token
+                cfg['auth_url'] = self.options.os_url
 
         else:
             # Validate password flow auth
@@ -356,54 +368,45 @@ class OpenStackShell(app.App):
                         "You must provide a password via"
                         " either --os-password, or env[OS_PASSWORD], "
                         " or prompted response")
-
-            if not ((self.options.os_project_id
-                    or self.options.os_project_name) or
-                    (self.options.os_domain_id
-                    or self.options.os_domain_name) or
-                    self.options.os_trust_id):
-                raise exc.CommandError(
-                    "You must provide authentication scope as a project "
-                    "or a domain via --os-project-id or env[OS_PROJECT_ID], "
-                    "--os-project-name or env[OS_PROJECT_NAME], "
-                    "--os-domain-id or env[OS_DOMAIN_ID], or"
-                    "--os-domain-name or env[OS_DOMAIN_NAME], or "
-                    "--os-trust-id or env[OS_TRUST_ID].")
-
-            if not self.options.os_auth_url:
-                raise exc.CommandError(
-                    "You must provide an auth url via"
-                    " either --os-auth-url or via env[OS_AUTH_URL]")
-
-            if (self.options.os_trust_id and
-               self.options.os_identity_api_version != '3'):
-                raise exc.CommandError(
-                    "Trusts can only be used with Identity API v3")
-
-            if (self.options.os_trust_id and
-               ((self.options.os_project_id
-                 or self.options.os_project_name) or
-                (self.options.os_domain_id
-                 or self.options.os_domain_name))):
-                raise exc.CommandError(
-                    "Authentication cannot be scoped to multiple targets. "
-                    "Pick one of project, domain or trust.")
+#
+#             if not ((self.options.os_project_id
+#                     or self.options.os_project_name) or
+#                     (self.options.os_domain_id
+#                     or self.options.os_domain_name) or
+#                     self.options.os_trust_id):
+#                 raise exc.CommandError(
+#                     "You must provide authentication scope as a project "
+#                     "or a domain via --os-project-id or env[OS_PROJECT_ID], "
+#                     "--os-project-name or env[OS_PROJECT_NAME], "
+#                     "--os-domain-id or env[OS_DOMAIN_ID], or"
+#                     "--os-domain-name or env[OS_DOMAIN_NAME], or "
+#                     "--os-trust-id or env[OS_TRUST_ID].")
+#
+#             if not self.options.os_auth_url:
+#                 raise exc.CommandError(
+#                     "You must provide an auth url via"
+#                     " either --os-auth-url or via env[OS_AUTH_URL]")
+#
+#             if (self.options.os_trust_id and
+#                self.options.os_identity_api_version != '3'):
+#                 raise exc.CommandError(
+#                     "Trusts can only be used with Identity API v3")
+#
+#             if (self.options.os_trust_id and
+#                ((self.options.os_project_id
+#                  or self.options.os_project_name) or
+#                 (self.options.os_domain_id
+#                  or self.options.os_domain_name))):
+#                 raise exc.CommandError(
+#                     "Authentication cannot be scoped to multiple targets. "
+#                     "Pick one of project, domain or trust.")
 
         self.client_manager = clientmanager.ClientManager(
-            token=self.options.os_token,
-            url=self.options.os_url,
-            auth_url=self.options.os_auth_url,
-            domain_id=self.options.os_domain_id,
-            domain_name=self.options.os_domain_name,
-            project_name=self.options.os_project_name,
-            project_id=self.options.os_project_id,
+            cloud=self.cloud,
             user_domain_id=self.options.os_user_domain_id,
             user_domain_name=self.options.os_user_domain_name,
             project_domain_id=self.options.os_project_domain_id,
             project_domain_name=self.options.os_project_domain_name,
-            username=self.options.os_username,
-            password=self.options.os_password,
-            region_name=self.options.os_region_name,
             verify=self.verify,
             timing=self.options.timing,
             api_version=self.api_version,
@@ -419,7 +422,57 @@ class OpenStackShell(app.App):
         * authenticate against Identity if requested
         """
 
+        # Parent __init__ parsed argv into self.options
         super(OpenStackShell, self).initialize_app(argv)
+        self.log.debug("cli opts: %s", self.options)
+
+        # Look for configuration file
+        self.cloud = cloud_config.OpenStackConfig().get_one_cloud(
+            self.options.os_cloud,
+        )
+        self.log.debug("cloud cfg: %s", self.cloud.config)
+
+        # Merge config environments
+        # attribute mapping: (<cloud-config>, <osc-parser>)
+        args = (
+            ('region_name', 'os_region_name'),
+            ('auth_url', 'os_auth_url'),
+            ('project_id', 'os_project_name'),
+            ('project_id', 'os_project_id'),
+            ('domain', 'os_domain_name'),
+            ('domain', 'os_domain_id'),
+            ('project_domain', 'os_project_domain_name'),
+            ('project_domain', 'os_project_domain_id'),
+            ('user_domain', 'os_user_domain_name'),
+            ('user_domain', 'os_user_domain_id'),
+            ('username', 'os_username'),
+            ('password', 'os_password'),
+            ('service_token', 'os_token'),
+            ('service_url', 'os_url'),
+            ('cacert', 'os_cacert'),
+            ('insecure', 'insecure'),
+        )
+        for arg, opt_arg in args:
+            # NOTE(dtroyer): While the parser has the env vars we don't
+            #                want to overwrite cloud.config[arg].  This
+            #                means that the first in the args tuple
+            #                will be kept when there are duplicates,
+            #                i.e. project name wins over project ID in
+            #                the current setup.
+            if hasattr(self.cloud.config, arg) and opt_arg in self.options:
+                self.cloud.config[arg] = getattr(self.options, opt_arg, None)
+        self.log.debug("nerged cfg: %s", self.cloud.config)
+
+        # Compatibility for OS_URL
+        if self.options.os_url and not self.options.os_auth_url:
+            self.options.os_auth_url = self.options.os_url
+
+        # Set up client TLS
+        cacert = getattr(self.cloud.config, 'cacert', None)
+        if cacert:
+            self.verify = cacert
+        else:
+            self.verify = not getattr(self.cloud.config, 'insecure', True)
 
         # Save default domain
         self.default_domain = self.options.os_default_domain
@@ -460,12 +513,6 @@ class OpenStackShell(app.App):
         # Handle deferred help and exit
         if self.options.deferred_help:
             self.DeferredHelpAction(self.parser, self.parser, None, None)
-
-        # Set up common client session
-        if self.options.os_cacert:
-            self.verify = self.options.os_cacert
-        else:
-            self.verify = not self.options.insecure
 
     def prepare_to_run_command(self, cmd):
         """Set up auth and API versions"""

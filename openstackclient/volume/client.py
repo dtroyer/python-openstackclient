@@ -70,7 +70,7 @@ def make_client(instance):
         client.client.management_url = instance.get_endpoint_for_service_type(
             API_NAME)
         client.client.service_catalog = instance._service_catalog
-    client.client.auth_token = instance._token
+    client.client.auth_token = instance.auth_ref.auth_token
 
     return client
 

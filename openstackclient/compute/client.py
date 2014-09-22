@@ -46,7 +46,7 @@ def make_client(instance):
     client = compute_client(
         username=instance._username,
         api_key=instance._password,
-        project_id=instance._project_name,
+        project_id=instance.auth_ref.project_name,
         auth_url=instance._auth_url,
         cacert=instance._cacert,
         insecure=instance._insecure,
@@ -62,15 +62,15 @@ def make_client(instance):
     )
 
     # Populate the Nova client to skip another auth query to Identity
-    if instance._url:
+    if instance.service_token:
         # token flow
-        client.client.management_url = instance._url
+        client.client.management_url = instance.auth_url
     else:
         # password flow
         client.client.management_url = instance.get_endpoint_for_service_type(
             API_NAME)
         client.client.service_catalog = instance._service_catalog
-    client.client.auth_token = instance._token
+    client.client.auth_token = instance.auth_ref.auth_token
     return client
 
 

@@ -45,28 +45,23 @@ class ClientManager(object):
     """Manages access to API clients, including authentication."""
     identity = ClientCache(identity_client.make_client)
 
-    def __init__(self, token=None, url=None, auth_url=None,
-                 domain_id=None, domain_name=None,
-                 project_name=None, project_id=None,
-                 username=None, password=None,
+    def __init__(self, cloud=None,
                  user_domain_id=None, user_domain_name=None,
                  project_domain_id=None, project_domain_name=None,
                  region_name=None, api_version=None, verify=True,
                  trust_id=None, timing=None):
-        self._token = token
-        self._url = url
-        self._auth_url = auth_url
-        self._domain_id = domain_id
-        self._domain_name = domain_name
-        self._project_name = project_name
-        self._project_id = project_id
-        self._username = username
-        self._password = password
+        self.cloud = cloud
+        self.service_token = getattr(cloud.config, 'service_token', None)
+        self._url = getattr(cloud.config, 'service_url', None)  # deprecated
+        self._auth_url = cloud.config['auth_url']       # _auth_url deprecated
+        self._project_name = cloud.config['project_id']  # deprecated
+        self._username = cloud.config['username']       # _username deprecated
+        self._password = cloud.config['password']       # _password deprecated
         self._user_domain_id = user_domain_id
         self._user_domain_name = user_domain_name
         self._project_domain_id = project_domain_id
         self._project_domain_name = project_domain_name
-        self._region_name = region_name
+        self._region_name = cloud.config['region_name']  # deprecated
         self._api_version = api_version
         self._trust_id = trust_id
         self._service_catalog = None
@@ -93,41 +88,36 @@ class ClientManager(object):
         # NOTE(dtroyer): These plugins are hard-coded for the first step
         #                in using the new Keystone auth plugins.
 
-        if self._url:
+        if self.service_token:
             LOG.debug('Using token auth %s', ver_prefix)
             if ver_prefix == 'v2':
                 self.auth = v2_auth.Token(
-                    auth_url=url,
-                    token=token,
+                    auth_url=self._url,
+                    token=self.service_token,
                 )
             else:
                 self.auth = v3_auth.Token(
-                    auth_url=url,
-                    token=token,
+                    auth_url=self._url,
+                    token=self.service_token,
                 )
         else:
             LOG.debug('Using password auth %s', ver_prefix)
             if ver_prefix == 'v2':
                 self.auth = v2_auth.Password(
-                    auth_url=auth_url,
-                    username=username,
-                    password=password,
-                    trust_id=trust_id,
-                    tenant_id=project_id,
-                    tenant_name=project_name,
+                    auth_url=self.cloud.config['auth_url'],
+                    username=self.cloud.config['username'],
+                    password=self.cloud.config['password'],
+                    tenant_name=self.cloud.config['project_id'],
                 )
             else:
                 self.auth = v3_auth.Password(
-                    auth_url=auth_url,
-                    username=username,
-                    password=password,
-                    trust_id=trust_id,
+                    auth_url=self.cloud.config['auth_url'],
+                    username=self.cloud.config['username'],
+                    password=self.cloud.config['password'],
                     user_domain_id=user_domain_id,
                     user_domain_name=user_domain_name,
-                    domain_id=domain_id,
-                    domain_name=domain_name,
-                    project_id=project_id,
-                    project_name=project_name,
+                    domain_name=self.cloud.config['domain'],
+                    project_name=self.cloud.config['project_id'],
                     project_domain_id=project_domain_id,
                     project_domain_name=project_domain_name,
                 )
@@ -138,13 +128,14 @@ class ClientManager(object):
         )
 
         self.auth_ref = None
-        if not self._url:
+        if not self.service_token:
             # Trigger the auth call
             self.auth_ref = self.session.auth.get_auth_ref(self.session)
             # Populate other password flow attributes
-            self._token = self.session.auth.get_token(self.session)
+            self.auth_token = self.session.auth.get_token(
+                self.session,
+            )
             self._service_catalog = self.auth_ref.service_catalog
-
         return
 
     def get_endpoint_for_service_type(self, service_type):
@@ -156,7 +147,7 @@ class ClientManager(object):
                 service_type=service_type)
         else:
             # Hope we were given the correct URL.
-            endpoint = self._url
+            endpoint = self.cloud.config['auth_url']
         return endpoint
 
 
