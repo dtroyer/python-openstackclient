@@ -15,12 +15,13 @@
 
 import copy
 
-from novaclient import exceptions as nova_exceptions
 import six
+
+from novaclient import exceptions as nova_exceptions
+from osc_lib.i18n import _
 
 from openstackclient.common import command
 from openstackclient.common import utils
-from openstackclient.i18n import _
 
 
 def _xform_common_availability_zone(az, zone_info):

@@ -27,11 +27,12 @@ else:
     msvcrt = None
 
 from glanceclient.common import utils as gc_utils
+from osc_lib.i18n import _
+
 from openstackclient.api import utils as api_utils
 from openstackclient.common import command
 from openstackclient.common import parseractions
 from openstackclient.common import utils
-from openstackclient.i18n import _
 
 
 DEFAULT_CONTAINER_FORMAT = 'bare'

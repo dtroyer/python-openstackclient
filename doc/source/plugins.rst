@@ -151,6 +151,9 @@ the plugin commands:
 
 .. code-block:: python
 
+    # osc-lib interfaces available to plugins:
+    from osc_lib.i18n import _
+
     # OSC common interfaces available to plugins:
     from openstackclient.common import command
     from openstackclient.common import exceptions

@@ -17,8 +17,9 @@
 
 import six
 
+from osc_lib.i18n import _
+
 from openstackclient.common import command
-from openstackclient.i18n import _
 
 
 class IssueToken(command.ShowOne):

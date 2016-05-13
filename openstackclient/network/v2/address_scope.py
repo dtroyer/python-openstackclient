@@ -13,10 +13,11 @@
 
 """Address scope action implementations"""
 
+from osc_lib.i18n import _
+
 from openstackclient.common import command
 from openstackclient.common import exceptions
 from openstackclient.common import utils
-from openstackclient.i18n import _
 from openstackclient.identity import common as identity_common
 
 
