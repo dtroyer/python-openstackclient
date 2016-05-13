@@ -18,10 +18,10 @@
 import six
 import sys
 
+from osc_lib.cli import parseractions
 from osc_lib.i18n import _
 
 from openstackclient.common import command
-from openstackclient.common import parseractions
 from openstackclient.common import utils
 
 
