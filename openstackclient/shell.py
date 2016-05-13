@@ -28,7 +28,6 @@ from cliff import complete
 from cliff import help
 from osc_lib.command import timing
 from osc_lib import exceptions as exc
-from osc_lib import clientmanager
 from osc_lib import logs
 from osc_lib import utils
 from oslo_utils import importutils
