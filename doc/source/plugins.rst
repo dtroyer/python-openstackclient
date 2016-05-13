@@ -95,7 +95,7 @@ so the version should not contain the leading 'v' character.
 
 .. code-block:: python
 
-    from openstackclient.common import utils
+    from osc_lib import utils
 
 
     DEFAULT_API_VERSION = '1'
@@ -155,11 +155,11 @@ the plugin commands:
     from osc_lib.cli import parseractions
     from osc_lib import exceptions
     from osc_lib.i18n import _
+    from osc_lib import utils
 
     # OSC common interfaces available to plugins:
     from openstackclient.common import command
     from openstackclient.common import logs
-    from openstackclient.common import utils
 
 
     class DeleteMypluginobject(command.Command):

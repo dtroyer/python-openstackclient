@@ -17,8 +17,8 @@ import argparse
 import six
 
 from osc_lib.i18n import _
+from osc_lib import utils
 
-from openstackclient.common import utils
 from openstackclient.identity import common as identity_common
 from openstackclient.network import common
 from openstackclient.network import utils as network_utils

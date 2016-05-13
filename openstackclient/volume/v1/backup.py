@@ -19,9 +19,9 @@ import copy
 import six
 
 from osc_lib.i18n import _
+from osc_lib import utils
 
 from openstackclient.common import command
-from openstackclient.common import utils
 
 
 class CreateBackup(command.ShowOne):

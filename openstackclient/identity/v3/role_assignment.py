@@ -13,8 +13,9 @@
 
 """Identity v3 Assignment action implementations """
 
+from osc_lib import utils
+
 from openstackclient.common import command
-from openstackclient.common import utils
 from openstackclient.identity import common
 
 

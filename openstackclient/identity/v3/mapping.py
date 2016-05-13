@@ -20,9 +20,9 @@ import json
 import six
 
 from osc_lib import exceptions
+from osc_lib import utils
 
 from openstackclient.common import command
-from openstackclient.common import utils
 
 
 class _RulesReader(object):

@@ -16,8 +16,8 @@ import copy
 import mock
 
 from osc_lib import exceptions
+from osc_lib import utils
 
-from openstackclient.common import utils
 from openstackclient.network.v2 import subnet_pool
 from openstackclient.tests import fakes
 from openstackclient.tests.identity.v3 import fakes as identity_fakes_v3

@@ -16,8 +16,9 @@
 import six
 import sys
 
+from osc_lib import utils
+
 from openstackclient.common import command
-from openstackclient.common import utils
 
 
 class CreateServiceProvider(command.ShowOne):

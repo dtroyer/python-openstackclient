@@ -22,9 +22,9 @@ import sys
 
 from osc_lib import exceptions
 from osc_lib.i18n import _
+from osc_lib import utils
 
 from openstackclient.common import command
-from openstackclient.common import utils
 
 
 class CreateKeypair(command.ShowOne):

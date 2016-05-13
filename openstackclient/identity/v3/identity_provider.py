@@ -15,8 +15,9 @@
 
 import six
 
+from osc_lib import utils
+
 from openstackclient.common import command
-from openstackclient.common import utils
 
 
 class CreateIdentityProvider(command.ShowOne):

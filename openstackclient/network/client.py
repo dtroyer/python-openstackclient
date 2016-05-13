@@ -15,8 +15,7 @@ import logging
 
 from openstack import connection
 from openstack import profile
-
-from openstackclient.common import utils
+from osc_lib import utils
 
 
 LOG = logging.getLogger(__name__)

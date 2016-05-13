@@ -16,8 +16,9 @@
 import datetime
 import six
 
+from osc_lib import utils
+
 from openstackclient.common import command
-from openstackclient.common import utils
 from openstackclient.identity import common
 
 

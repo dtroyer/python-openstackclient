@@ -18,9 +18,9 @@ the user can list domains and projects they are allowed to access, and request
 a scoped token."""
 
 from osc_lib import exceptions
+from osc_lib import utils
 
 from openstackclient.common import command
-from openstackclient.common import utils
 
 
 UNSCOPED_AUTH_PLUGINS = ['v3unscopedsaml', 'v3unscopedadfs', 'v3oidc']
