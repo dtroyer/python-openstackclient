@@ -19,9 +19,8 @@ import itertools
 import six
 import sys
 
+from osc_lib.command import command
 from osc_lib import utils
-
-from openstackclient.common import command
 
 
 # List the quota items, map the internal argument name to the option

@@ -18,9 +18,9 @@
 import six
 import sys
 
+from osc_lib.command import command
 from osc_lib import utils
 
-from openstackclient.common import command
 from openstackclient.identity import common
 
 

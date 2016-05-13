@@ -17,10 +17,9 @@ The first step of federated auth is to fetch an unscoped token. From there,
 the user can list domains and projects they are allowed to access, and request
 a scoped token."""
 
+from osc_lib.command import command
 from osc_lib import exceptions
 from osc_lib import utils
-
-from openstackclient.common import command
 
 
 UNSCOPED_AUTH_PLUGINS = ['v3unscopedsaml', 'v3unscopedadfs', 'v3oidc']

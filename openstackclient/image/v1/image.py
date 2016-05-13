@@ -28,11 +28,11 @@ else:
 
 from glanceclient.common import utils as gc_utils
 from osc_lib.cli import parseractions
+from osc_lib.command import command
 from osc_lib.i18n import _
 from osc_lib import utils
 
 from openstackclient.api import utils as api_utils
-from openstackclient.common import command
 
 
 DEFAULT_CONTAINER_FORMAT = 'bare'

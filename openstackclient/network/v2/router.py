@@ -18,11 +18,11 @@ import json
 import logging
 
 from osc_lib.cli import parseractions
+from osc_lib.command import command
 from osc_lib import exceptions
 from osc_lib.i18n import _
 from osc_lib import utils
 
-from openstackclient.common import command
 from openstackclient.identity import common as identity_common
 
 
