@@ -13,10 +13,10 @@
 
 """Network action implementations"""
 
+from osc_lib import exceptions
 from osc_lib.i18n import _
 
 from openstackclient.common import command
-from openstackclient.common import exceptions
 from openstackclient.common import utils
 from openstackclient.identity import common as identity_common
 from openstackclient.network import common

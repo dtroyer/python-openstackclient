@@ -14,7 +14,8 @@
 import copy
 import mock
 
-from openstackclient.common import exceptions
+from osc_lib import exceptions
+
 from openstackclient.network.v2 import address_scope
 from openstackclient.tests import fakes
 from openstackclient.tests.identity.v3 import fakes as identity_fakes_v3

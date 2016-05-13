@@ -14,7 +14,8 @@
 import copy
 import mock
 
-from openstackclient.common import exceptions
+from osc_lib import exceptions
+
 from openstackclient.common import utils
 from openstackclient.network.v2 import subnet as subnet_v2
 from openstackclient.tests import fakes

@@ -14,8 +14,9 @@
 import abc
 import six
 
+from osc_lib import exceptions
+
 from openstackclient.common import command
-from openstackclient.common import exceptions
 
 
 @six.add_metaclass(abc.ABCMeta)

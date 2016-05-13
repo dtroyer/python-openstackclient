@@ -17,10 +17,10 @@
 
 import six
 
+from osc_lib import exceptions
 from osc_lib.i18n import _
 
 from openstackclient.common import command
-from openstackclient.common import exceptions
 from openstackclient.common import parseractions
 from openstackclient.common import utils
 

@@ -19,9 +19,9 @@ import logging
 import stevedore
 
 from keystoneclient.auth import base
+from osc_lib import exceptions as exc
 from osc_lib.i18n import _
 
-from openstackclient.common import exceptions as exc
 from openstackclient.common import utils
 
 

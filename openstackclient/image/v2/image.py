@@ -19,11 +19,11 @@ import argparse
 import six
 
 from glanceclient.common import utils as gc_utils
+from osc_lib import exceptions
 from osc_lib.i18n import _
 
 from openstackclient.api import utils as api_utils
 from openstackclient.common import command
-from openstackclient.common import exceptions
 from openstackclient.common import parseractions
 from openstackclient.common import utils
 from openstackclient.identity import common

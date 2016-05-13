@@ -19,11 +19,11 @@ from requests_mock.contrib import fixture
 
 from keystoneclient.auth.identity import v2 as auth_v2
 from keystoneclient import service_catalog
+from osc_lib import exceptions as exc
 
 from openstackclient.api import auth
 from openstackclient.api import auth_plugin
 from openstackclient.common import clientmanager
-from openstackclient.common import exceptions as exc
 from openstackclient.tests import fakes
 from openstackclient.tests import utils
 
